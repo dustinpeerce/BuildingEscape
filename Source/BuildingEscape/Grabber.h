@@ -33,4 +33,6 @@ private:
 	bool IsHoldingObject = false;
 	AActor* ObjectBeingHeld;
 
+	UPhysicsHandleComponent * PhysicsHandle = nullptr;
+
 };

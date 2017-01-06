@@ -25,6 +25,16 @@ void UGrabber::BeginPlay()
 	PlayerController = GetWorld()->GetFirstPlayerController();
 
 	UE_LOG(LogTemp, Warning, TEXT("Grabber Ready!"));
+
+	// Look for attached Physics Handle
+	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
+
+	if (PhysicsHandle) {
+
+	}
+	else {
+		UE_LOG(LogTemp, Error, TEXT("Physics Handle missing from %s"), *(GetOwner()->GetName()));
+	}
 	
 }
 
@@ -52,7 +62,18 @@ void UGrabber::TickComponent( float DeltaTime, ELevelTick TickType, FActorCompon
 	else {
 
 		// Check for input to pick up object
-		
+		FHitResult Hit; // Store the object that was hit
+
+		FCollisionObjectQueryParams ObjectQueryParams(ECollisionChannel::ECC_PhysicsBody);	// Basically the LayerMask in Unity terms
+		FCollisionQueryParams QueryParams(FName(TEXT("")), false, GetOwner());	// I don't really know
+
+		GetWorld()->LineTraceSingleByObjectType(Hit, PlayerViewPointLocation, LineTraceEnd, ObjectQueryParams, QueryParams);
+
+		AActor * ActorHit = Hit.GetActor();
+
+		if (ActorHit) {
+			UE_LOG(LogTemp, Warning, TEXT("Line Trace Hit: %s"), *(ActorHit->GetName()));
+		}
 	}
 }
 
