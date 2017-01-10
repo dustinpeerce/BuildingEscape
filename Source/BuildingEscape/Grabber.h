@@ -34,5 +34,8 @@ private:
 	AActor* ObjectBeingHeld;
 
 	UPhysicsHandleComponent * PhysicsHandle = nullptr;
+	UInputComponent * InputHandle = nullptr;
 
+
+	void Grab();
 };

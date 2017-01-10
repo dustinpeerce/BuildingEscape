@@ -35,7 +35,20 @@ void UGrabber::BeginPlay()
 	else {
 		UE_LOG(LogTemp, Error, TEXT("Physics Handle missing from %s"), *(GetOwner()->GetName()));
 	}
-	
+
+	InputHandle = GetOwner()->FindComponentByClass<UInputComponent>();
+	if (InputHandle) {
+		// Bind the input action
+		InputHandle->BindAction("Grab", IE_Pressed, this, &UGrabber::Grab);
+	}
+	else {
+		UE_LOG(LogTemp, Error, TEXT("Input Handle missing from %s"), *(GetOwner()->GetName()));
+	}
+}
+
+
+void UGrabber::Grab() {
+	UE_LOG(LogTemp, Warning, TEXT("Grab Pressed"));
 }
 
 
