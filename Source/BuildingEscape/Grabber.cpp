@@ -13,7 +13,6 @@ UGrabber::UGrabber()
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
 }
 
 
@@ -24,9 +23,15 @@ void UGrabber::BeginPlay()
 
 	PlayerController = GetWorld()->GetFirstPlayerController();
 
-	UE_LOG(LogTemp, Warning, TEXT("Grabber Ready!"));
+	FindPhysicsHandleComponent();
 
-	// Look for attached Physics Handle
+	SetupInputComponent();
+}
+
+
+// Look for attached Physics Handle
+void UGrabber::FindPhysicsHandleComponent() {
+	
 	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
 
 	if (PhysicsHandle) {
@@ -35,11 +40,16 @@ void UGrabber::BeginPlay()
 	else {
 		UE_LOG(LogTemp, Error, TEXT("Physics Handle missing from %s"), *(GetOwner()->GetName()));
 	}
+}
 
+
+// Find Input Component and Bind Actions
+void UGrabber::SetupInputComponent() {
 	InputHandle = GetOwner()->FindComponentByClass<UInputComponent>();
 	if (InputHandle) {
 		// Bind the input action
 		InputHandle->BindAction("Grab", IE_Pressed, this, &UGrabber::Grab);
+		InputHandle->BindAction("Grab", IE_Released, this, &UGrabber::Release);
 	}
 	else {
 		UE_LOG(LogTemp, Error, TEXT("Input Handle missing from %s"), *(GetOwner()->GetName()));
@@ -49,44 +59,51 @@ void UGrabber::BeginPlay()
 
 void UGrabber::Grab() {
 	UE_LOG(LogTemp, Warning, TEXT("Grab Pressed"));
+
+	ActorBeingHeld = GetFirstPhysicsBodyInReach().GetActor();
+
+	if (ActorBeingHeld) {
+		UE_LOG(LogTemp, Warning, TEXT("Line Trace Hit: %s"), *(ActorBeingHeld->GetName()));
+		IsHoldingObject = true;
+	}
 }
 
+void UGrabber::Release() {
+	UE_LOG(LogTemp, Warning, TEXT("Grab Released"));
+
+	ActorBeingHeld = nullptr;
+	IsHoldingObject = false;
+}
 
 // Called every frame
 void UGrabber::TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction )
 {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 
-	// Get Player view point
-	PlayerController->GetPlayerViewPoint(OUT PlayerViewPointLocation, OUT PlayerViewPointRotation);
-
-	//UE_LOG(LogTemp, Warning, TEXT("Position: %s ... Rotation: %s"), *PlayerViewPointLocation.ToString(), *PlayerViewPointRotation.ToString());
-
-	// Draw a red line to visualize
-	FVector LineTraceEnd = PlayerViewPointLocation + PlayerViewPointRotation.Vector() * Reach;
-	DrawDebugLine(GetWorld(), PlayerViewPointLocation, LineTraceEnd, FColor(255, 0, 0), false, 0.0f, 0.0f, 10.0f);
-
 	if (IsHoldingObject) {
 
 		// Update location of object being held
 
-		// Check for input to drop the object
 	}
-	else {
 
-		// Check for input to pick up object
-		FHitResult Hit; // Store the object that was hit
-
-		FCollisionObjectQueryParams ObjectQueryParams(ECollisionChannel::ECC_PhysicsBody);	// Basically the LayerMask in Unity terms
-		FCollisionQueryParams QueryParams(FName(TEXT("")), false, GetOwner());	// I don't really know
-
-		GetWorld()->LineTraceSingleByObjectType(Hit, PlayerViewPointLocation, LineTraceEnd, ObjectQueryParams, QueryParams);
-
-		AActor * ActorHit = Hit.GetActor();
-
-		if (ActorHit) {
-			UE_LOG(LogTemp, Warning, TEXT("Line Trace Hit: %s"), *(ActorHit->GetName()));
-		}
-	}
 }
 
+
+const FHitResult UGrabber::GetFirstPhysicsBodyInReach() {
+
+	// Get Player view point
+	PlayerController->GetPlayerViewPoint(OUT PlayerViewPointLocation, OUT PlayerViewPointRotation);
+
+	// Get Ray Trace Path
+	LineTraceEnd = PlayerViewPointLocation + PlayerViewPointRotation.Vector() * Reach;
+
+	// Store the object that was hit
+	FHitResult Hit;
+
+	FCollisionObjectQueryParams ObjectQueryParams(ECollisionChannel::ECC_PhysicsBody);	// Basically the LayerMask in Unity terms
+	FCollisionQueryParams QueryParams(FName(TEXT("")), false, GetOwner());	// I don't really know
+
+	GetWorld()->LineTraceSingleByObjectType(Hit, PlayerViewPointLocation, LineTraceEnd, ObjectQueryParams, QueryParams);
+
+	return Hit;
+}

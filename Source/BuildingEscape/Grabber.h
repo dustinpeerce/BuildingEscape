@@ -27,15 +27,20 @@ private:
 
 	FVector PlayerViewPointLocation;
 	FRotator PlayerViewPointRotation;
+	FVector LineTraceEnd;
 
 	float Reach = 100.0f;
 
 	bool IsHoldingObject = false;
-	AActor* ObjectBeingHeld;
+	AActor* ActorBeingHeld;
 
 	UPhysicsHandleComponent * PhysicsHandle = nullptr;
 	UInputComponent * InputHandle = nullptr;
 
 
 	void Grab();
+	void Release();
+	void FindPhysicsHandleComponent();
+	void SetupInputComponent();
+	const FHitResult GetFirstPhysicsBodyInReach();
 };
