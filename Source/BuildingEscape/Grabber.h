@@ -29,9 +29,8 @@ private:
 	FRotator PlayerViewPointRotation;
 	FVector LineTraceEnd;
 
-	float Reach = 100.0f;
+	float Reach = 160.0f;
 
-	bool IsHoldingObject = false;
 	AActor* ActorBeingHeld;
 
 	UPhysicsHandleComponent * PhysicsHandle = nullptr;
@@ -43,4 +42,5 @@ private:
 	void FindPhysicsHandleComponent();
 	void SetupInputComponent();
 	const FHitResult GetFirstPhysicsBodyInReach();
+	void UpdateLineTrace();
 };

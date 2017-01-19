@@ -34,10 +34,7 @@ void UGrabber::FindPhysicsHandleComponent() {
 	
 	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
 
-	if (PhysicsHandle) {
-
-	}
-	else {
+	if (!PhysicsHandle) {
 		UE_LOG(LogTemp, Error, TEXT("Physics Handle missing from %s"), *(GetOwner()->GetName()));
 	}
 }
@@ -58,45 +55,38 @@ void UGrabber::SetupInputComponent() {
 
 
 void UGrabber::Grab() {
-	UE_LOG(LogTemp, Warning, TEXT("Grab Pressed"));
-
-	ActorBeingHeld = GetFirstPhysicsBodyInReach().GetActor();
+	auto HitResult = GetFirstPhysicsBodyInReach();
+	ActorBeingHeld = HitResult.GetActor();
 
 	if (ActorBeingHeld) {
-		UE_LOG(LogTemp, Warning, TEXT("Line Trace Hit: %s"), *(ActorBeingHeld->GetName()));
-		IsHoldingObject = true;
+		auto ComponentToGrab = HitResult.GetComponent();
+
+		PhysicsHandle->GrabComponent(ComponentToGrab, NAME_None, ComponentToGrab->GetOwner()->GetActorLocation(), true);
 	}
+
 }
+
 
 void UGrabber::Release() {
-	UE_LOG(LogTemp, Warning, TEXT("Grab Released"));
-
 	ActorBeingHeld = nullptr;
-	IsHoldingObject = false;
+	PhysicsHandle->ReleaseComponent();
 }
 
+
 // Called every frame
-void UGrabber::TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction )
-{
+void UGrabber::TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 
-	if (IsHoldingObject) {
+	UpdateLineTrace();
 
-		// Update location of object being held
-
+	if (PhysicsHandle->GrabbedComponent) {
+		PhysicsHandle->SetTargetLocation(LineTraceEnd);
 	}
 
 }
 
 
 const FHitResult UGrabber::GetFirstPhysicsBodyInReach() {
-
-	// Get Player view point
-	PlayerController->GetPlayerViewPoint(OUT PlayerViewPointLocation, OUT PlayerViewPointRotation);
-
-	// Get Ray Trace Path
-	LineTraceEnd = PlayerViewPointLocation + PlayerViewPointRotation.Vector() * Reach;
-
 	// Store the object that was hit
 	FHitResult Hit;
 
@@ -106,4 +96,13 @@ const FHitResult UGrabber::GetFirstPhysicsBodyInReach() {
 	GetWorld()->LineTraceSingleByObjectType(Hit, PlayerViewPointLocation, LineTraceEnd, ObjectQueryParams, QueryParams);
 
 	return Hit;
+}
+
+
+void UGrabber::UpdateLineTrace() {
+	// Get Player view point
+	PlayerController->GetPlayerViewPoint(OUT PlayerViewPointLocation, OUT PlayerViewPointRotation);
+
+	// Get Ray Trace Path
+	LineTraceEnd = PlayerViewPointLocation + PlayerViewPointRotation.Vector() * Reach;
 }
