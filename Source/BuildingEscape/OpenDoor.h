@@ -36,8 +36,11 @@ private:
 
 	float CurrentTime;
 
+	float TriggerMass = 50.f;
+
 	float LastDoorOpenTime;
 	
-	AActor* ActorThatOpens;		// pawn inherits from actor
 	AActor* Owner;				// Object owner
+
+	float GetTotalMassofActorsOnPlate();
 };
