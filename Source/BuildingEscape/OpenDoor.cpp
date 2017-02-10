@@ -23,21 +23,6 @@ void UOpenDoor::BeginPlay()
 
 	// Find owner of this object
 	Owner = GetOwner();
-
-
-}
-
-void UOpenDoor::OpenDoor() {
-
-	// Set the door rotation
-	// Owner->SetActorRotation(FRotator(0.0f, OpenAngle, 0.0f));
-	OnOpenRequest.Broadcast();
-}
-
-void UOpenDoor::CloseDoor() {
-
-	// Set the door rotation
-	Owner->SetActorRotation(FRotator(0.0f, 0.0f, 0.0f));
 }
 
 // Called every frame
@@ -49,13 +34,11 @@ void UOpenDoor::TickComponent( float DeltaTime, ELevelTick TickType, FActorCompo
 
 	// Poll the Trigger Volume
 	if (GetTotalMassofActorsOnPlate() > TriggerMass) {
-		OpenDoor();
-		LastDoorOpenTime = CurrentTime;
+		OnOpen.Broadcast();
 	}
-
-	// If enough time has passed, close the door
-	if (CurrentTime - LastDoorOpenTime > DoorCloseDelay) {
-		CloseDoor();
+	// If not enough mass...
+	else {
+		OnClose.Broadcast();
 	}
 		
 }
